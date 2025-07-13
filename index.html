@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>TvWatch </title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/w3.css">
+        <link rel="stylesheet" href="../../css/material-icons.css">
+        <script type="text/javascript" src="../../js/jquery.min.js"></script>
+        <script></script>
+        <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+        <!--<script src="https://reference.dashif.org/dash.js/nightly/dist/dash.all.min.js"></script>-->
+        <style>
+            .material-icons {
+                vertical-align: -25%;
+                font-size: 50px;
+                color: white;
+            }
+
+            body {
+                background-color: #000;
+                height: 100%;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                position: absolute;
+            }
+
+            video {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                margin: auto;
+                width: 99%;
+                height: 99%;
+                z-index: 1;
+            }
+
+            video::-internal-media-controls-overlay-cast-button {
+                display: block;
+                z-index: 100;
+                top: 0;
+                right: 0;
+            }
+
+            .loading {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                margin: auto;
+                width: 200px;
+                height: 200px;
+                z-index: 5;
+                -webkit-animation: spin 1s linear infinite;
+                -moz-animation: spin 1s linear infinite;
+                animation: spin 1s linear infinite;
+            }
+
+            @-moz-keyframes spin {
+                100% {
+                    -moz-transform: rotate(360deg);
+                }
+            }
+
+            @-webkit-keyframes spin {
+                100% {
+                    -webkit-transform: rotate(360deg);
+                }
+            }
+
+            @keyframes spin {
+                100% {
+                    -webkit-transform: rotate(360deg);
+                    transform: rotate(360deg);
+                }
+            }
+
+            .loader {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                margin: auto;
+                width: 200px;
+                height: 200px;
+                z-index: 5;
+            }
+
+            svg path, svg rect {
+                fill: #cd6a33;
+            }
+
+            .error {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                margin: auto;
+                max-width: 300px;
+                max-height: 200px;
+                color: #cd6a33;
+                z-index: 20 !important;
+                text-align: center;
+                background-color: rgba(0, 0, 0, 0.75);
+                padding: 30px;
+            }
+
+            .mcast {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                margin: auto;
+                max-width: 300px;
+                max-height: 200px;
+                color: #cd6a33;
+                z-index: 20 !important;
+                text-align: center;
+                background-color: rgba(0, 0, 0, 0.75);
+                padding: 30px;
+            }
+
+            .listepic {
+                overflow: hidden;
+                padding: 20px;
+                position: absolute;
+                right: 0px;
+                width: 200px;
+                bottom: 10%;
+                top: 10%;
+                z-index: 15 !important;
+            }
+
+            .listepic-container {
+                overflow : hidden;
+                padding : 6px;
+                height: 70%;
+            }
+
+            .listepic-scroll {
+                text-align: center;
+            }
+
+            .listepic-scroll-item:hover, .listepic-scroll-item:focus, .listepic-scroll-item:active {
+                color: #cd6a33;
+            }
+
+            .listepic-link {
+                background-color: rgba(0, 0, 0, 0.70);
+                border: none;
+                color: white;
+                padding: 7px 5px;
+                text-align: center;
+                text-decoration: none !important;
+                display: inline-block;
+                font-size: 14px;
+                margin-right: 20px;
+                margin-bottom: 5px;
+                cursor: pointer;
+                width: 98%;
+                border-radius: 2px;
+                -moz-border-radius: 2px;
+                -webkit-border-radius: 2px;
+                border: 2px solid rgba(242, 240, 240, 0.37);
+            }
+
+            a.listepic-link:hover, a.listepic-link:focus {
+                border: 2px solid #cd6a33;
+                color: white;
+                -webkit-transform: scale(1.05, 1.05);
+                -ms-transform: scale(1.05);
+                transform: scale(1.05);
+            }
+
+            .controls {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                margin: auto;
+                width: 99%;
+                height: 99%;
+                color: white;
+                z-index: 10 !important;
+                padding: 10px;
+            }
+
+            .controls-top {
+                position: absolute;
+                top: 0;
+                right: 0;
+                left: 0;
+                text-align: left;
+                background-color: rgba(0, 0, 0, 0.25);
+                font-size: 2em;
+                padding: 10px;
+            }
+
+            .controls-top a:hover i , .controls-top a:focus i {
+                background: rgba(204, 204, 204, 0.5);
+            }
+
+            .controls-center {
+                position: absolute;
+                height: 10em;
+                width: 10em;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                margin: auto;
+            }
+
+            .controls-center a {
+                display: inline-block;
+            }
+
+            .controls-bottom {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+
+            .btn-screen {
+                position: absolute;
+                right: 0;
+                bottom: 0;
+            }
+
+            .controls-cast {
+                position: absolute;
+                right: 0;
+                height: 50px;
+                width: 50px;
+                margin-right: 20px;
+            }
+
+            @media (max-width: 500px) {
+                .listepic {
+                    display: none !important;
+                }
+            }
+
+            @media(max-width: 800px) {
+                .listepic-container {
+                    height: 65%;
+                }
+            }
+
+            a {
+                text-decoration: none;
+                text-shadow: 2px 0 0 #000, -2px 0 0 #000,0 2px 0 #000, 0 -2px 0 #000, 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 5px #000;
+            }
+
+            .controls-bottom a {
+                padding-left: 5px;
+                padding-right: 5px;
+                display: -webkit-box;
+                display: -moz-box;
+                display: -ms-inline-flexbox;
+                display: -webkit-inline-flex;
+                display: inline-flex;
+                border-radius: 5px;
+            }
+
+            .controls-bottom a h5 {
+                margin-right: 5px;
+            }
+
+            .controls-bottom a:hover, .controls-bottom a:focus {
+                background: rgba(204, 204, 204, 0.5);
+            }
+
+            video::-internal-media-controls-overlay-cast-button {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <script>
+            var source, title, delay, hls, fatalerror, touch, thumb;
+            var session, applicationId, sessionRequest, apiConfig, Castplayer, CastController, CastTimer;
+
+            function Play() {
+                try {
+                    video.play();
+                } catch (e) {/**/
+                }
+            }
+            function Screen() {
+                var reques = player.requestFullscreen || player.mozRequestFullScreen || player.webkitRequestFullScreen || player.msRequestFullscreen;
+                var cancel = document.exitFullscreen || document.mozCancelFullScreen || document.webkitExitFullscreen || document.msExitFullscreen;
+                if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                    try {
+                        reques.call(player);
+                    } catch (e) {/**/
+                    }
+                } else {
+                    try {
+                        cancel.call(document);
+                    } catch (e) {/**/
+                    }
+                }
+            }
+        </script>
+        <div id="player">
+            <video id="video" disableRemotePlayback autoplay poster="../images/Default.png"></video>
+            <aside class="listepic" id="listaE" style="display: none;">
+                <div class="listepic-scroll">
+                    <a onclick="scrollT()" href="javascript:void(0);">
+                        <i class="material-icons listepic-scroll-item">&#xe316;</i>
+                    </a>
+                </div>
+                <div id="listaL" class="listepic-container"></div>
+                <div class="listepic-scroll">
+                    <a onclick="scrollB()" href="javascript:void(0);">
+                        <i class="material-icons listepic-scroll-item">&#xe313;</i>
+                    </a>
+                </div>
+            </aside>
+            <div class="loader" id="loading" style="display: none;">
+                <svg width="200px" height="200px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-eclipse" style="animation-play-state: running; animation-delay: 0s; background: none;">
+                    <path ng-attr-d="{{config.pathCmd}}" ng-attr-fill="{{config.color}}" stroke="none" d="M10 50A40 40 0 0 0 90 50A40 42 0 0 1 10 50" fill="#e15b64" transform="rotate(24 50 51)" style="animation-play-state: running; animation-delay: 0s;" class="">
+                        <animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 51;360 50 51" keyTimes="0;1" dur="1s" begin="0s" repeatCount="indefinite" style="animation-play-state: running; animation-delay: 0s;" class=""></animateTransform>
+                    </path>
+                </svg>
+            </div>
+            <div id="error" class="error" style="display: none;">
+                <h3>EL CONTENIDO NO SE PUEDE REPRODUCIR</h3>
+            </div>
+            <div id="mcast" class="mcast" style="display: none;"></div>
+            <div id="controls" class="controls" style="display: none;">
+                <div class="controls-top">
+                    <div id="head"></div>
+                </div>
+                <div class="controls-center">
+                    <a id="btn-play" onclick="Play();" href="javascript:void(0)">
+                        <i class="material-icons" style="font-size: 10em;">&#xE037;</i>
+                    </a>
+                </div>
+                <div class="controls-bottom">
+                    <a class="btn-screen" id="btn-screen" onclick="Screen();" href="javascript:void(0)">
+                        <h5>Pantalla completa</h5>
+                        <i class="material-icons">&#xE5D0;</i>
+                    </a>
+                </div>
+                <a class="controls-cast" id="btn-cast" onclick="Cast();" href="javascript:void(0)" style="display: none;">
+                    <i class="material-icons">&#xE307;</i>
+                </a>
+            </div>
+        </div>
+        <script>
+            var Streams = [{
+                "name": "Online 24\/7",
+                "m3u8": "online-24-7",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/online-24-7.playlist.m3u8",
+                "poster": "images\/los-simpson-24hs.png"
+            }, {
+                "name": "Telefe",
+                "m3u8": "telefe",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/telefe.playlist.m3u8",
+                "poster": "images\/telefe.png"
+            }, {
+                "name": "El Trece",
+                "m3u8": "eltrece",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/eltrece.playlist.m3u8",
+                "poster": "images\/el13.png"
+            }, {
+                "name": "TvPublica",
+                "m3u8": "tvpublica",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/tvpublica.playlist.m3u8",
+                "poster": "images\/tvpublica.png"
+            }, {
+                "name": "America",
+                "m3u8": "americatv",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/americatv.playlist.m3u8",
+                "poster": "images\/america.png"
+            }, {
+                "name": "TN",
+                "m3u8": "tn",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/tn.playlist.m3u8",
+                "poster": "images\/tn.png"
+            }, {
+                "name": "Rural",
+                "m3u8": "rural",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/rural.playlist.m3u8",
+                "poster": "images\/rural.png"
+            }, {
+                "name": "DeportTV",
+                "m3u8": "deportv",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/deportv.playlist.m3u8",
+                "poster": "images\/deportv.png"
+            }, {
+                "name": "Canal de la Ciudad",
+                "m3u8": "canalciud",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/canalciud.playlist.m3u8",
+                "poster": "images\/CanaldelaCiudad.png"
+            }, {
+                "name": "C5N",
+                "m3u8": "c5n",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/c5n.playlist.m3u8",
+                "poster": "images\/c5n.png"
+            }, {
+                "name": "Cr\u00f3nica TV",
+                "m3u8": "CronicaTv",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/CronicaTv.playlist.m3u8",
+                "poster": "images\/CronicaTv.png"
+            }, {
+                "name": "A24",
+                "m3u8": "a24",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/a24.playlist.m3u8",
+                "poster": "images\/A24.png"
+            }, {
+                "name": "Canal 7 Mza.",
+                "m3u8": "canal7mza",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/canal7mza.playlist.m3u8",
+                "poster": "images\/Canal7Mza.png"
+            }, {
+                "name": "LN+",
+                "m3u8": "lntv",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/lntv.playlist.m3u8",
+                "poster": "images\/LN.png"
+            }, {
+                "name": "Canal 26",
+                "m3u8": "c26",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/c26.playlist.m3u8",
+                "poster": "images\/canal26.png"
+            }, {
+                "name": "Telemax",
+                "m3u8": "telemax",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/telemax.playlist.m3u8",
+                "poster": "images\/telemax.png"
+            }, {
+                "name": "TECtv",
+                "m3u8": "tectv",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/tectv.playlist.m3u8",
+                "poster": "images\/TECtv.png"
+            }, {
+                "name": "CNN espa\u00f1ol",
+                "m3u8": "CNNesp",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/CNNesp.playlist.m3u8",
+                "poster": "images\/CNNesp.png"
+            }, {
+                "name": "Ciudad magazine",
+                "m3u8": "ciudadmagazine",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/ciudadmagazine.playlist.m3u8",
+                "poster": "images\/Ciudadmagazine.png"
+            }, {
+                "name": "CanalNet",
+                "m3u8": "CanalNet",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/CanalNet.playlist.m3u8",
+                "poster": "images\/net-tv.png"
+            }, {
+                "name": "BoobaTV",
+                "m3u8": "BoobaTV",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/BoobaTV.playlist.m3u8",
+                "poster": "images\/BoobaTV.png"
+            }, {
+                "name": "WOW tv",
+                "m3u8": "wowtv",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/wowtv.playlist.m3u8",
+                "poster": "images\/wowtv.png"
+            }, {
+                "name": "t5satelital",
+                "m3u8": "t5satelital",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/t5satelital.playlist.m3u8",
+                "poster": "images\/t5satelital.png"
+            }, {
+                "name": "Canal 5",
+                "m3u8": "canal5",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/canal5.playlist.m3u8",
+                "poster": "images\/Canal5.png"
+            }, {
+                "name": "Canal 4 Jujuy",
+                "m3u8": "c4jujuy",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/c4jujuy.playlist.m3u8",
+                "poster": "images\/Canal4Jujuy.png"
+            }, {
+                "name": "Canal 7 Jujuy",
+                "m3u8": "canal7jujuy",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/canal7jujuy.playlist.m3u8",
+                "poster": "images\/canal7jujuy.png"
+            }, {
+                "name": "Fashiontv",
+                "m3u8": "fashiontv",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/fashiontv.playlist.m3u8",
+                "poster": "images\/Fashiontvla.png"
+            }, {
+                "name": "CIUDAD Chaco",
+                "m3u8": "ciudadchaco",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/ciudadchaco.playlist.m3u8",
+                "poster": "images\/chacodxdtv.png"
+            }, {
+                "name": "5RTv",
+                "m3u8": "5RTv",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/5RTv.playlist.m3u8",
+                "poster": "images\/5rtv.png"
+            }, {
+                "name": "Canal 4 San J.",
+                "m3u8": "4sanjuan",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/4sanjuan.playlist.m3u8",
+                "poster": "images\/Canal4SanJuan.png"
+            }, {
+                "name": "Canal Luz",
+                "m3u8": "canalluz",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/canalluz.playlist.m3u8",
+                "poster": "images\/CanalLuz.png"
+            }, {
+                "name": "Telefe Santa Fe",
+                "m3u8": "local-10",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-10.playlist.m3u8",
+                "poster": "images\/Canal13SantaFe.png"
+            }, {
+                "name": "TvPublica 2",
+                "m3u8": "local-11",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-11.playlist.m3u8",
+                "poster": "images\/tvpublica.png"
+            }, {
+                "name": "Somos Santa Fe",
+                "m3u8": "local-12",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-12.playlist.m3u8",
+                "poster": "images\/SomosSantaFe.png"
+            }, {
+                "name": "Santa Fe Canal",
+                "m3u8": "local-13",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-13.playlist.m3u8",
+                "poster": "images\/Santa_Fe_Canal.png"
+            }, {
+                "name": "E!",
+                "m3u8": "local-14",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-14.playlist.m3u8",
+                "poster": "images\/e.png"
+            }, {
+                "name": "Canal a",
+                "m3u8": "local-15",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-15.playlist.m3u8",
+                "poster": "images\/Canal_a.png"
+            }, {
+                "name": "Canal 9",
+                "m3u8": "local-16",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-16.playlist.m3u8",
+                "poster": "images\/canal9.png"
+            }, {
+                "name": "America TV",
+                "m3u8": "local-17",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-17.playlist.m3u8",
+                "poster": "images\/america.png"
+            }, {
+                "name": "Canal 9 Parana",
+                "m3u8": "local-18",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-18.playlist.m3u8",
+                "poster": "images\/NueveLitoral.png"
+            }, {
+                "name": "Encuentro",
+                "m3u8": "local-19",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-19.playlist.m3u8",
+                "poster": "images\/encuentro.png"
+            }, {
+                "name": "Cine AR",
+                "m3u8": "local-20",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-20.playlist.m3u8",
+                "poster": "images\/cinear.png"
+            }, {
+                "name": "Investigacion Periodistica",
+                "m3u8": "local-21",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-21.playlist.m3u8",
+                "poster": "images\/IPNoticias.png"
+            }, {
+                "name": "RAI",
+                "m3u8": "local-22",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-22.playlist.m3u8",
+                "poster": "images\/RaiItalia.png"
+            }, {
+                "name": "RT",
+                "m3u8": "local-98",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-98.playlist.m3u8",
+                "poster": "images\/RT.png"
+            }, {
+                "name": "TVE",
+                "m3u8": "local-23",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-23.playlist.m3u8",
+                "poster": "images\/TVE.png"
+            }, {
+                "name": "El Garage",
+                "m3u8": "local-24",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-24.playlist.m3u8",
+                "poster": "images\/GarageTV.png"
+            }, {
+                "name": "El Gourmet",
+                "m3u8": "local-25",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-25.playlist.m3u8",
+                "poster": "images\/elgourmet.png"
+            }, {
+                "name": "Lifetime",
+                "m3u8": "Lifetime",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/Lifetime.playlist.m3u8",
+                "poster": "images\/Lifetime.png"
+            }, {
+                "name": "Las Estrellas",
+                "m3u8": "lasestrellas",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/lasestrellas.playlist.m3u8",
+                "poster": "images\/las-estrellas.png"
+            }, {
+                "name": "Telemundo",
+                "m3u8": "local-26",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-26.playlist.m3u8",
+                "poster": "images\/Telemundo.png"
+            }, {
+                "name": "Cartoonito",
+                "m3u8": "local-30",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-30.playlist.m3u8",
+                "poster": "images\/Cartoonito.png"
+            }, {
+                "name": "Cartoon Network",
+                "m3u8": "local-31",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-31.playlist.m3u8",
+                "poster": "images\/CartoonNetwork.png"
+            }, {
+                "name": "Disney Channel",
+                "m3u8": "local-32",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-32.playlist.m3u8",
+                "poster": "images\/DisneyChannel.png"
+            }, {
+                "name": "Nickelodeon",
+                "m3u8": "local-33",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-33.playlist.m3u8",
+                "poster": "images\/Nickelodeon.png"
+            }, {
+                "name": "Discovery Kids",
+                "m3u8": "local-34",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-34.playlist.m3u8",
+                "poster": "images\/DiscoveryKids.png"
+            }, {
+                "name": "Disney Jr",
+                "m3u8": "local-35",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-35.playlist.m3u8",
+                "poster": "images\/DisneyJunior.png"
+            }, {
+                "name": "Paka Paka",
+                "m3u8": "local-36",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-36.playlist.m3u8",
+                "poster": "images\/pakapaka.png"
+            }, {
+                "name": "History",
+                "m3u8": "local-40",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-40.playlist.m3u8",
+                "poster": "images\/HistoryChannel.png"
+            }, {
+                "name": "History 2",
+                "m3u8": "local-41",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-41.playlist.m3u8",
+                "poster": "images\/history2.png"
+            }, {
+                "name": "Discovery ID",
+                "m3u8": "local-42",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-42.playlist.m3u8",
+                "poster": "images\/InvestigationDiscovery.png"
+            }, {
+                "name": "h&h",
+                "m3u8": "local-43",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-43.playlist.m3u8",
+                "poster": "images\/h&h.png"
+            }, {
+                "name": "Discovery",
+                "m3u8": "local-44",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-44.playlist.m3u8",
+                "poster": "images\/DiscoveryChannel.png"
+            }, {
+                "name": "Discovery Turbo",
+                "m3u8": "local-99",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-99.playlist.m3u8",
+                "poster": "images\/DiscoveryTurbo.png"
+            }, {
+                "name": "Animal Planet",
+                "m3u8": "local-45",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-45.playlist.m3u8",
+                "poster": "images\/animalplanet.png"
+            }, {
+                "name": "National Geographic",
+                "m3u8": "local-46",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-46.playlist.m3u8",
+                "poster": "images\/NationalGeographic.png"
+            }, {
+                "name": "MTV",
+                "m3u8": "local-50",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-50.playlist.m3u8",
+                "poster": "images\/mtvhd.png"
+            }, {
+                "name": "Quiero Musica",
+                "m3u8": "local-51",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-51.playlist.m3u8",
+                "poster": "images\/qmusica.png"
+            }, {
+                "name": "Stingray Concerts",
+                "m3u8": "local-111",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-111.playlist.m3u8",
+                "poster": "images\/StingrayConcerts.png"
+            }, {
+                "name": "KZO",
+                "m3u8": "local-52",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-52.playlist.m3u8",
+                "poster": "images\/KZO.png"
+            }, {
+                "name": "Metro",
+                "m3u8": "local-53",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-53.playlist.m3u8",
+                "poster": "images\/metro.png"
+            }, {
+                "name": "Comedy Central",
+                "m3u8": "local-60",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-60.playlist.m3u8",
+                "poster": "images\/comedycentral.png"
+            }, {
+                "name": "Cinemax",
+                "m3u8": "local-61",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-61.playlist.m3u8",
+                "poster": "images\/cinemax.png"
+            }, {
+                "name": "Cinecanal",
+                "m3u8": "local-62",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-62.playlist.m3u8",
+                "poster": "images\/cinecanal.png"
+            }, {
+                "name": "TNT Series",
+                "m3u8": "local-64",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-64.playlist.m3u8",
+                "poster": "images\/tntseries.png"
+            }, {
+                "name": "TNT Novelas",
+                "m3u8": "local-65",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-65.playlist.m3u8",
+                "poster": "images\/TNT_Novelas.png"
+            }, {
+                "name": "TNT",
+                "m3u8": "local-66",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-66.playlist.m3u8",
+                "poster": "images\/tnt.png"
+            }, {
+                "name": "Studio Universal",
+                "m3u8": "local-67",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-67.playlist.m3u8",
+                "poster": "images\/studiouniversal.png"
+            }, {
+                "name": "Star Channel",
+                "m3u8": "local-68",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-68.playlist.m3u8",
+                "poster": "images\/StarChannel.png"
+            }, {
+                "name": "Space",
+                "m3u8": "local-69",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-69.playlist.m3u8",
+                "poster": "images\/Space.png"
+            }, {
+                "name": "Sony",
+                "m3u8": "local-70",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-70.playlist.m3u8",
+                "poster": "images\/sony.png"
+            }, {
+                "name": "A&E",
+                "m3u8": "local-71",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-71.playlist.m3u8",
+                "poster": "images\/AyE.png"
+            }, {
+                "name": "Film & Arts",
+                "m3u8": "local-FilmyArt",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-FilmyArt.playlist.m3u8",
+                "poster": "images\/FilmyArts.png"
+            }, {
+                "name": "TLC",
+                "m3u8": "tlc",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/tlc.playlist.m3u8",
+                "poster": "images\/TLC.png"
+            }, {
+                "name": "Paramount",
+                "m3u8": "local-72",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-72.playlist.m3u8",
+                "poster": "images\/Paramount.png"
+            }, {
+                "name": "Warner Channel",
+                "m3u8": "local-73",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-73.playlist.m3u8",
+                "poster": "images\/warner.png"
+            }, {
+                "name": "Volver",
+                "m3u8": "local-74",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-74.playlist.m3u8",
+                "poster": "images\/volver.png"
+            }, {
+                "name": "Universal Channel",
+                "m3u8": "local-75",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-75.playlist.m3u8",
+                "poster": "images\/UniversalChannel.png"
+            }, {
+                "name": "AMC",
+                "m3u8": "local-76",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-76.playlist.m3u8",
+                "poster": "images\/amc.png"
+            }, {
+                "name": "AXN",
+                "m3u8": "local-77",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-77.playlist.m3u8",
+                "poster": "images\/axn.png"
+            }, {
+                "name": "FX",
+                "m3u8": "local-78",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-78.playlist.m3u8",
+                "poster": "images\/FX.png"
+            }, {
+                "name": "TCM",
+                "m3u8": "local-79",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-79.playlist.m3u8",
+                "poster": "images\/tcm.png"
+            }, {
+                "name": "Bravo",
+                "m3u8": "local-80",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-80.playlist.m3u8",
+                "poster": "images\/Bravo.png"
+            }, {
+                "name": "HBO PLUS",
+                "m3u8": "local-109",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-109.playlist.m3u8",
+                "poster": "images\/HBOPlus.png"
+            }, {
+                "name": "HBO",
+                "m3u8": "local-102",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-102.playlist.m3u8",
+                "poster": "images\/hbo.png"
+            }, {
+                "name": "HBO Signature",
+                "m3u8": "local-107",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-107.playlist.m3u8",
+                "poster": "images\/HBOSignature.png"
+            }, {
+                "name": "HBO Family",
+                "m3u8": "local-101",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-101.playlist.m3u8",
+                "poster": "images\/HBOFamily.png"
+            }, {
+                "name": "HBO POP",
+                "m3u8": "local-108",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-108.playlist.m3u8",
+                "poster": "images\/HBOPop.png"
+            }, {
+                "name": "HBO XTREME",
+                "m3u8": "local-103",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-103.playlist.m3u8",
+                "poster": "images\/HBOXtreme.png"
+            }, {
+                "name": "HBO MUNDI",
+                "m3u8": "local-110",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-110.playlist.m3u8",
+                "poster": "images\/HBOMundi.png"
+            }, {
+                "name": "HBO 2",
+                "m3u8": "local-105",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-105.playlist.m3u8",
+                "poster": "images\/hbo2.png"
+            }, {
+                "name": "TyC Sports",
+                "m3u8": "local-90",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-90.playlist.m3u8",
+                "poster": "images\/TycSports.png"
+            }, {
+                "name": "Fox Sports",
+                "m3u8": "local-91",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-91.playlist.m3u8",
+                "poster": "images\/foxsports.png"
+            }, {
+                "name": "Fox Sports 3",
+                "m3u8": "local-92",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-92.playlist.m3u8",
+                "poster": "images\/FoxSports3.png"
+            }, {
+                "name": "Fox Sports 2",
+                "m3u8": "local-93",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-93.playlist.m3u8",
+                "poster": "images\/foxsports2.png"
+            }, {
+                "name": "ESPN",
+                "m3u8": "local-94",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-94.playlist.m3u8",
+                "poster": "images\/espn.png"
+            }, {
+                "name": "ESPN 4",
+                "m3u8": "local-95",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-95.playlist.m3u8",
+                "poster": "images\/espn4.png"
+            }, {
+                "name": "ESPN 3",
+                "m3u8": "local-96",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-96.playlist.m3u8",
+                "poster": "images\/espn3.png"
+            }, {
+                "name": "ESPN 2",
+                "m3u8": "local-97",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-97.playlist.m3u8",
+                "poster": "images\/espn2.png"
+            }, {
+                "name": "ESPN 5",
+                "m3u8": "local-104",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-104.playlist.m3u8",
+                "poster": "images\/espn5.png"
+            }, {
+                "name": "ESPN 7",
+                "m3u8": "local-106",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-106.playlist.m3u8",
+                "poster": "images\/espn7.png"
+            }, {
+                "name": "Evento 1",
+                "m3u8": "local-01",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-01.playlist.m3u8",
+                "poster": "images\/evento1.png"
+            }, {
+                "name": "Evento 2",
+                "m3u8": "local-02",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-02.playlist.m3u8",
+                "poster": "images\/evento2.png"
+            }, {
+                "name": "Evento 3",
+                "m3u8": "local-03",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-03.playlist.m3u8",
+                "poster": "images\/evento3.png"
+            }, {
+                "name": "Evento 4",
+                "m3u8": "local-04",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-04.playlist.m3u8",
+                "poster": "images\/evento4.png"
+            }, {
+                "name": "Evento 5",
+                "m3u8": "local-05",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-05.playlist.m3u8",
+                "poster": "images\/evento5.png"
+            }, {
+                "name": "Evento 6",
+                "m3u8": "local-06",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-06.playlist.m3u8",
+                "poster": "images\/evento6.png"
+            }, {
+                "name": "Evento 7",
+                "m3u8": "local-e07",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-e07.playlist.m3u8",
+                "poster": "images\/evento7.png"
+            }, {
+                "name": "Evento 8",
+                "m3u8": "local-e08",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-e08.playlist.m3u8",
+                "poster": "images\/evento8.png"
+            }, {
+                "name": "Evento 9",
+                "m3u8": "local-e09",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-e09.playlist.m3u8",
+                "poster": "images\/evento9.png"
+            }, {
+                "name": "Evento 10",
+                "m3u8": "local-e10",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-e10.playlist.m3u8",
+                "poster": "images\/evento10.png"
+            }, {
+                "name": "Evento 11",
+                "m3u8": "local-e11",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-e11.playlist.m3u8",
+                "poster": "images\/evento11.png"
+            }, {
+                "name": "Evento 12",
+                "m3u8": "local-e12",
+                "url": "http:\/\/192.168.248.5\/Live\/6cf674c84a53a2ae226f646958a2bd0b\/local-e12.playlist.m3u8",
+                "poster": "images\/evento12.png"
+            }];
+            var player = document.getElementById('player');
+            var video = document.getElementById('video');
+            var blist = document.getElementById("listaE");
+            var elmnt = document.getElementById("listaL");
+            var wait = document.getElementById("loading");
+            var error = document.getElementById("error");
+            var mcast = document.getElementById("mcast");
+            var head = document.getElementById("head");
+            var controls = document.getElementById("controls");
+            var btn_play = document.getElementById("btn-play");
+            var btn_screen = document.getElementById("btn-screen");
+            var btn_cast = document.getElementById("btn-cast");
+
+            function Pause() {
+                video.pause();
+            }
+            function Stop() {
+                video.pause();
+                video.src = null;
+            }
+            function Hplay() {
+                btn_play.style.display = 'none';
+            }
+            function Smenu() {
+                blist.style.display = 'block';
+                controls.style.display = 'block';
+            }
+            function Hmenu() {
+                if (fatalerror) {
+                    return;
+                }
+                blist.style.display = 'none';
+                controls.style.display = 'none';
+            }
+            function Swait() {
+                wait.style.display = 'block';
+            }
+            function Hwait() {
+                wait.style.display = 'none';
+            }
+            function Serror() {
+                Hwait();
+                if (session) {
+                    mcast.style.display = 'block';
+                } else {
+                    fatalerror = true;
+                    error.style.display = 'block';
+                    setTitle('Error...');
+                }
+            }
+            function Herror() {
+                error.style.display = 'none';
+                mcast.style.display = 'none';
+                setTitle(title);
+            }
+            function Progress() {
+                if (!session) {
+                    if (video.readyState > 2) {
+                        if (video.paused) {
+                            Play();
+                        }
+                    }
+                }
+            }
+            function Playing() {
+                Hwait();
+                Herror();
+                Hplay();
+                startDelay();
+            }
+            function Waiting() {
+                if (session) {
+                    Hwait();
+                    return;
+                }
+                if (video.readyState > 1) {
+                    return;
+                }
+                Swait();
+            }
+            function scrollB() {
+                Menu();
+                elmnt.scrollTop += 40;
+            }
+            function scrollT() {
+                Menu();
+                elmnt.scrollTop -= 40;
+            }
+            function startDelay() {
+                delay = setTimeout(Hmenu, 10000);
+            }
+            function resetDelay() {
+                clearTimeout(delay);
+            }
+            function Menu() {
+                Smenu();
+                resetDelay();
+                startDelay();
+                /*code = event.keyCode; if(!session){if(video.readyState > 2){if(video.paused){try{Play();} catch(e) {  }}}}*/
+            }
+            function Timeupdate() {
+                if (fatalerror) {
+                    return;
+                }
+                if (video.readyState > 0) {
+                    if (!video.paused) {
+                        Hplay();
+                    }
+                }
+                if (video.readyState > 1) {
+                    if (!video.paused) {
+                        Hwait();
+                    }
+                }
+                if (navigator.userAgent.match(/iPhone/i)) {
+                    return;
+                }
+                if (video.readyState > 2) {
+                    if (video.paused) {
+                        try {
+                            Play();
+                        } catch (e) {/**/
+                        }
+                    }
+                }
+            }
+
+            function setTitle(str) {
+                head.innerHTML = '<a href="javascript:window.history.back();"><i class="material-icons">&#xe5cb;</i></a><span>' + str + '</span>';
+                document.title = str;
+            }
+            function Player(source, name, poster) {
+                Herror();
+                Swait();
+                title = name;
+                setTitle(title);
+                fatalerror = null;
+                error.innerHTML = '<h3>EL CANAL NO ESTÁ DISPONIBLE, INTENTA MAS TARDE.</h3>';
+                try {
+                    hls.destroy();
+                    hls.detachMedia();
+                } catch (e) {/* */
+                }
+                if (session) {
+                    destroy();
+                }
+                var type = "video/mp4";
+                if (source.match(/.webm/i)) {
+                    type = "video/webm";
+                }
+                if (source.match(/.mp3/i)) {
+                    type = "audio/mpeg";
+                }
+                if (source.match(/.aac/i)) {
+                    type = "audio/mp4";
+                }
+                if (source.match(/.mp4/i)) {
+                    type = "video/mp4";
+                }
+                if (source.match(/.m3u8/i)) {
+                    type = "application/vnd.apple.mpegurl";
+                }
+                if (poster != null)
+                    try {
+                        video.poster = poster;
+                    } catch (e) {
+                        video.poster = '';
+                    }
+                else {
+                    video.poster = '';
+                }
+                if (Hls.isSupported() && source.match(/.m3u8/i)) {
+                    hls = new Hls({
+                        manifestLoadingTimeOut: 2e4,
+                        manifestLoadingMaxRetry: 4,
+                        /*debug: true,*/
+                    });
+                    hls.autoLevelEnabled = true;
+                    hls.bandwidthEstimate = 2500000;
+                    hls.loadSource(source);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        Playing();
+                        Play();
+                    });
+                    hls.on(Hls.Events.ERROR, function(event, data) {
+                        if (data.fatal) {
+                            switch (data.type) {
+                            case Hls.ErrorTypes.DOWNLOAD_ERROR:
+                                console.error('Error al descargar un segmento del flujo HLS');
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                console.error('Error de red al cargar el flujo HLS');
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MANIFEST_LOAD_ERROR:
+                                console.error('Error al cargar el manifiesto del flujo HLS');
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.LEVEL_LOAD_ERROR:
+                                console.error('Error al cargar una lista de reproducción del flujo HLS');
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                console.error('Error de medios al cargar el flujo HLS');
+                                hls.recoverMediaError();
+                                break;
+                            case Hls.ErrorTypes.MANIFEST_PARSE_ERROR:
+                                console.error('Error de análisis del manifiesto del flujo HLS');
+                                hls.recoverMediaError();
+                                break;
+                            case Hls.ErrorTypes.BUFFER_APPEND_ERROR:
+                                console.error('Error al agregar un segmento al búfer de reproducción');
+                                hls.recoverMediaError();
+                                break;
+                            case Hls.ErrorTypes.KEY_LOAD_ERROR:
+                                console.error('Error al cargar la clave de descifrado');
+                                hls.recoverMediaError();
+                                break;
+                            case Hls.ErrorTypes.BUFFER_FORMAT_ERROR:
+                                console.error('Error de formato al analizar un segmento del flujo HLS');
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                console.error('Error fatal al cargar el flujo HLS');
+                                hls.destroy();
+                                Serror();
+                                break;
+                            }
+                        }
+                    });
+                    return;
+                }
+                if (video.canPlayType(type)) {
+                    video.src = source;
+                    video.load();
+                    video.addEventListener('loadedmetadata', function() {
+                        Playing();
+                        Play();
+                    });
+                    return;
+                }
+                error.innerHTML = '<h3>CONTENIDO NO SOPORTADO POR EL NAVEGADOR</h3>';
+                Serror();
+            }
+
+            function Chanels(chanel) {
+                Streams.forEach(function(element) {
+                    if (element['m3u8'] == chanel) {
+                        source = element['url'];
+                        title = element['name'];
+                        poster = element['poster'];
+                    }
+                    elmnt.innerHTML += '<a id="ID' + element['m3u8'] + '" onclick="Player(' + "'" + element['url'] + "','" + element['name'] + "'" + ')" href="javascript:void(0)" class="listepic-link" > ' + element['name'] + ' </a>';
+                });
+                if (source) {
+                    Player(source, title, poster);
+                }
+            }
+
+            var chan = window.location.hash.substr(1);
+            if (Streams != null) {
+                Chanels(chan);
+            }
+            Smenu();
+            try {
+                $('#listaL').animate({
+                    scrollTop: $('#ID' + chan).offset().top - $('#listaL').offset().top - 15
+                }, 5000);
+            } catch (e) {/**/
+            }
+
+            function SendError(message) {
+                return;
+            }
+
+            window.onload = function() {
+                document.oncontextmenu = function() {
+                    return false;
+                }
+                try {
+                    video.removeAttribute('controls');
+                } catch (e) {/**/
+                }
+                if (player.addEventListener) {
+                    video.addEventListener("playing", Playing);
+                    video.addEventListener("waiting", Waiting);
+                    video.addEventListener("interruptend", Serror);
+                    video.addEventListener("error", Serror);
+                    video.addEventListener("progress", Progress);
+                    video.addEventListener('play', Hplay);
+                    try {
+                        document.addEventListener("click", Menu);
+                    } catch (e) {/**/
+                    }
+                    try {
+                        window.addEventListener("keyup", Menu);
+                    } catch (e) {/**/
+                    }
+                    try {
+                        document.addEventListener("mousemove", Menu);
+                    } catch (e) {/**/
+                    }
+                    try {
+                        window.addEventListener("keypress", Menu);
+                    } catch (e) {/**/
+                    }
+                    try {
+                        window.addEventListener("keydown", Menu);
+                    } catch (e) {/**/
+                    }
+                }
+                setInterval(Timeupdate, 1000);
+            }
+        </script>
+    </body>
+</html>
